@@ -24,7 +24,7 @@ fastqc {{extra_args}} -t {{ncores}} -o {{output}} {{f}}
 
     # example arguments :
     
-    # script_variables={
+    # var={
     #     "extra_args": "",
     #     "ncores":"<n.cores>", 
     #     "output":"<output_folder>",
@@ -80,11 +80,10 @@ if __name__ == "__main__":
             os.makedirs(output_folder)
 
         # add variables to script
-        fastqc.script_variables={
+        fastqc.var={
             "output":output_folder,
             "f":input_file,
             "extra_args": "",
-            "ncores": 4
         } 
 
         # set environment docker/apptainer
