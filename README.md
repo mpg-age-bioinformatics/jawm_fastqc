@@ -1,1 +1,1 @@
-# jawm-fastqc
+# jawm_fastqc
