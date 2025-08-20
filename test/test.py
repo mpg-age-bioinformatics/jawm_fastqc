@@ -1,5 +1,5 @@
 
-# usage: python3 fastqc.py
+# usage: python3 test.py
 
 import sys
 import os
