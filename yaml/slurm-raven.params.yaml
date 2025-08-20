@@ -1,0 +1,5 @@
+- scope: process
+  name: "fastqc"
+  manager: "slurm"
+  manager_slurm: {"--ntasks-per-core":"2", "-p":"general,small", "--mem":"20GB", "-t":"1:00:00", "-c":"8" }
+  script_variables: {"ncores": "16" }  
