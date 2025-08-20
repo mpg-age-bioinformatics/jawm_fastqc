@@ -54,3 +54,20 @@ fastqc {{extra_args}} -t {{ncores}} -o {{output}} {{f}}
 )
 # }}}
 
+
+# {{{
+if __name__ == "__main__":
+    import sys
+    # execute process
+    fastqc.execute()
+
+    # wait for all processes to complete
+    jawm.Process.wait()
+
+    # print the output
+    print(fastqc.get_output())
+
+    sys.exit(0)
+
+    
+# }}}
