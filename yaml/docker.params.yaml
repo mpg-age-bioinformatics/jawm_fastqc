@@ -1,4 +1,5 @@
 - scope: process
   name: "fastqc"
   container: "mpgagebioinformatics/fastqc:0.11.9"
+  environmnent: "docker"
   script_variables: {"ncores": "2" }  
