@@ -55,7 +55,6 @@ fastqc {{extra_args}} -t {{ncores}} -o {{output}} {{f}}
 # }}}
 
 
-# {{{
 if __name__ == "__main__":
     import sys
     # execute process
@@ -68,6 +67,3 @@ if __name__ == "__main__":
     print(fastqc.get_output())
 
     sys.exit(0)
-
-    
-# }}}
