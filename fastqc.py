@@ -19,7 +19,7 @@ import jawm
 fastqc=jawm.Process( 
     name="fastqc",
     script="""#!/bin/bash
-fastqc {{extra_args}} -t {{ncores}} -o {{output}} {{f}}
+fastqc {{extra_args}} -t {{ncores}} -o {{mk.output}} {{map.f}}
 """,
 
     # example arguments :
@@ -27,8 +27,8 @@ fastqc {{extra_args}} -t {{ncores}} -o {{output}} {{f}}
     # var={
     #     "extra_args": "",
     #     "ncores":"<n.cores>", 
-    #     "output":"<output_folder>",
-    #     "f": "<input_file>",
+    #     "mk.output":"<output_folder>",
+    #     "map.f": "<input_file>",
     # },
     
     # manager="slurm",
@@ -57,6 +57,7 @@ fastqc {{extra_args}} -t {{ncores}} -o {{output}} {{f}}
 
 if __name__ == "__main__":
     import sys
+
     # execute process
     fastqc.execute()
 
@@ -67,3 +68,7 @@ if __name__ == "__main__":
     print(fastqc.get_output())
 
     sys.exit(0)
+
+
+
+

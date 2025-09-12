@@ -1,4 +1,4 @@
 - scope: process
   name: "fastqc"
   container: "docker://mpgagebioinformatics/fastqc:0.11.9"
-  environmnent: "apptainer" 
+  environment: "apptainer" 

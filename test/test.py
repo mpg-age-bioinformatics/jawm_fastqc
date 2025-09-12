@@ -14,6 +14,7 @@ if ( not jawm.utils.docker_available() ) and ( not jawm.utils.apptainer_availabl
     print("Neither Docker nor Apptainer could be found, stopping test...")
     sys.exit(1)
 
+
 # define script input and output
 input_file=Path("test.fastq.gz").resolve()
 output_folder=Path("test-output").resolve()
@@ -24,19 +25,17 @@ if not os.path.isdir(output_folder):
 
 # add variables to script
 fastqc.var={
-    "output":output_folder,
-    "f":input_file,
+    "mk.output":output_folder,
+    "map.f":input_file,
     "extra_args": "",
 } 
 
 # set environment docker/apptainer
 if jawm.utils.apptainer_available(v=True) :
-    # fastqc.param_file="../yaml/apptainer.params.yaml"
     fastqc.update_params("../yaml/apptainer.params.yaml")
     fastqc.environment_apptainer={ '-B': [input_file, output_folder] }
     
 if jawm.utils.docker_available(v=True) :
-    # fastqc.param_file="../yaml/docker.params.yaml"
     fastqc.update_params("../yaml/docker.params.yaml")
     fastqc.environment_apptainer={ '-v': [input_file, output_folder] }
 
