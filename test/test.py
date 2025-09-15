@@ -99,6 +99,7 @@ print(fastqc.get_output())
 hash_test=jawm.utils.write_hash_file(os.path.join(output_folder,"test_fastqc.html"), "test.hash")
 
 if not hash_test:
+    print("!!", hash_test)
     sys.exit(1)
 
 

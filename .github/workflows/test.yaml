@@ -48,6 +48,11 @@ jobs:
         run: |
           cd test && export YAML="test.yaml" && python3 test.py
 
+      - name: Failure Notification
+        if: failure()
+        run: |
+          echo "Failure detected. Triggering Slack Failure Notification"     
+
       - name: Slack Failure Notification
         if: failure() && ${{ !env.ACT }} # skip during local actions testing
         run: | 
