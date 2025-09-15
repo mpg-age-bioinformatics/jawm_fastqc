@@ -1,0 +1,10 @@
+- scope: process
+  name: "fastqc"
+  container: "mpgagebioinformatics/fastqc:0.11.9"
+  environment: "docker"
+  parallel: False
+  var:
+    extra_args: ""
+    mk.output: "test/test-output"
+    map.f: "test/test.fastq.gz"
+    ncores: "2"

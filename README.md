@@ -19,7 +19,8 @@ $ cat yaml/docker.params.yaml
 - scope: process
   name: "fastqc"
   container: "mpgagebioinformatics/fastqc:0.11.9"
-  environmnent: "docker"
+  environment: "docker"
+  parallel: False  
   var:
     ncores: "2" 
 ```

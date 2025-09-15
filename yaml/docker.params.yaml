@@ -1,6 +1,9 @@
 - scope: process
   name: "fastqc"
   container: "mpgagebioinformatics/fastqc:0.11.9"
-  environmnent: "docker"
+  environment: "docker"
+  environment_docker": 
+      "-v": "/nexus/posix0/MAGE-flaski/"
+  parallel: False  
   var: 
     ncores: "2"  

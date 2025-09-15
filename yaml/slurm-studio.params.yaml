@@ -1,7 +1,6 @@
 - scope: process
   name: "fastqc"
   manager: "slurm"
-  container: "docker://mpgagebioinformatics/fastqc:0.11.9" 
-  environment: "apptainer"
   manager_slurm: {"-p":"cluster,dedicated", "--mem":"4000", "-t":"1:00:00", "-c":"8" }
-  var: {"ncores": "8" }  
+  var:
+    "ncores": "8"

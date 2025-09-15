@@ -68,7 +68,3 @@ if __name__ == "__main__":
     print(fastqc.get_output())
 
     sys.exit(0)
-
-
-
-
