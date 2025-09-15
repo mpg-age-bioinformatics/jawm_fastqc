@@ -2,8 +2,6 @@
   name: "fastqc"
   container: "mpgagebioinformatics/fastqc:0.11.9"
   environment: "docker"
-  environment_docker": 
-      "-v": "/nexus/posix0/MAGE-flaski/"
   parallel: False  
   var: 
-    ncores: "2"  
+    ncores: "2"

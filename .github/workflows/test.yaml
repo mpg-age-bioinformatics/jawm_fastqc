@@ -19,7 +19,6 @@ jobs:
         with:
           python-version: ">=3.10"
 
-
       # 3️⃣ Ensure Docker is available
       - name: Check Docker
         run: |
@@ -49,19 +48,18 @@ jobs:
         run: |
           cd test && export YAML="test.yaml" && python3 test.py
 
-      - name: Run test act 
-        run: |
-          echo "---${{ github.event.act }}---"
+      - name: Slack Failure Notification
+        if: failure() && ${{ !env.ACT }} # skip during local actions testing
+        run: | 
+          generate_post_data()
+          {
+            cat << EOF
+          {
+            "text": "${GITHUB_REPOSITORY##*/}@$(echo $GITHUB_SHA | cut -c 1-8) test FAILED"
+          }
+          EOF
+          } 
+          curl -H "Content-Type: application/json" -X POST -d "$(generate_post_data)" ${{ secrets.SLACK_JAWM_WEBHOOK }}
 
-      # - name: Slack Failure Notification
-      #   if: failure() && ${{ github.event.act }} # skip during local actions testing
-      #   run: | 
-      #     generate_post_data()
-      #     {
-      #       cat << EOF
-      #     {
-      #       "text": "${GITHUB_REPOSITORY##*/}@$(echo $GITHUB_SHA | cut -c 1-8) test FAILED"
-      #     }
-      #     EOF
-      #     } 
-      #     curl -H "Content-Type: application/json" -X POST -d "$(generate_post_data)" ${{ secrets.SLACK_JAWM_WEBHOOK }}
+# from the jawm_fastqc folder
+# act -s JAWM_BIOINFORMATICS_KEY="$(cat ~/.ssh/jawm)"

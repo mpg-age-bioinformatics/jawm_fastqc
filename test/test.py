@@ -96,4 +96,19 @@ jawm.Process.wait()
 print(fastqc.get_output())
 
 # write out and compare output hash
-jawm.utils.write_hash_file(os.path.join(output_folder,"test_fastqc.html"), "test.hash")
+hash_test=jawm.utils.write_hash_file(os.path.join(output_folder,"test_fastqc.html"), "test.hash")
+
+if not hash_test:
+    sys.exit(1)
+
+
+## testing 
+#
+# eg. 1:
+# python3 test.py
+#
+# eg. 2:
+# export YAML="test.yaml" python3 test.py
+#
+# eg. 3 (with act from the jawm_fastqc folder):
+# act -s JAWM_BIOINFORMATICS_KEY="$(cat ~/.ssh/jawm)"
