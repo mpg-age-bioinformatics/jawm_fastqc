@@ -39,6 +39,11 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan github.com >> ~/.ssh/known_hosts
 
+      - name: Install jawm
+        run: |
+          python -m pip install --upgrade pip
+          pip install git+ssh://git@github.com/mpg-age-bioinformatics/jawm.git --user
+
       - name: Download data
         run: |
           mkdir test/test-input
@@ -50,14 +55,17 @@ jobs:
           done < ./test/data.txt
           awk '{print $1, "./test/test-input/"$2}' ./test/data.txt | md5sum -c -
 
-      - name: Install jawm
+      - name: Run jawm
         run: |
-          python -m pip install --upgrade pip
-          pip install git+ssh://git@github.com/mpg-age-bioinformatics/jawm.git --user     
-
-      - name: Run test.py
-        run: |
-          cd test && export YAML="test.yaml" && export RAW_DATA="/nexus/posix0/MAGE-flaski/service/posit/home/jboucas/jawm_fastqc/test" && python3 test.py
+          for py in $(ls *.py) ; 
+            do 
+              tag=${py%.py}
+              for parameters_yaml in $(ls ./test/${tag}${suffix}.*.yaml ) ; 
+                do
+                  printf "\n\n\njawm ${py} -p ${parameters_yaml} --hash hash.yaml\n\n\n"
+                  jawm ${py} -p ${parameters_yaml} --hash hash.yaml
+              done
+          done
 
       - name: Succeeded
         if: success()
