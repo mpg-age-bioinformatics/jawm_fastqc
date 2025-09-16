@@ -6,5 +6,5 @@
   var:
     extra_args: ""
     mk.output: "test/test-output"
-    map.f: "test/test.fastq.gz"
+    map.f: "test/test-input/test.fastq.gz"
     ncores: "2"

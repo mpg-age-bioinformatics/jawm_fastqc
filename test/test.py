@@ -61,7 +61,7 @@ else:
 #########################################################
 
 # online files should not be bigger than 90mb 
-online_input_file="https://github.com/mpg-age-bioinformatics/jawm_fastqc/raw/refs/heads/main/test/test.fastq.gz"
+online_input_file="https://ndownloader.figshare.com/files/57999445"
 
 # define script input and output
 input_file=os.path.join(raw_data,"test.fastq.gz")
