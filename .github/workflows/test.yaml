@@ -60,7 +60,7 @@ jobs:
           for py in $(ls *.py) ; 
             do 
               tag=${py%.py}
-              for parameters_yaml in $(ls ./test/${tag}${suffix}.*.yaml ) ; 
+              for parameters_yaml in $(ls ./test/${tag}${suffix}.*yaml ) ; 
                 do
                   printf "\n\n\njawm ${py} -p ${parameters_yaml} --hash hash.yaml\n\n\n"
                   jawm ${py} -p ${parameters_yaml} --hash hash.yaml
