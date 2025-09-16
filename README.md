@@ -5,7 +5,7 @@ Command line usage:
 jawm fastqc.py -v yaml/demo.vars.yaml -p yaml/docker.params.yaml 
 ```
 
-Check out the example yaml files:
+Example yaml files:
 ```
 $ cat yaml/demo.vars.yaml
 - scope: process
@@ -23,4 +23,16 @@ $ cat yaml/docker.params.yaml
   parallel: False  
   var:
     ncores: "2" 
+```
+
+Testing (requires docker):
+```
+# download test input data
+jawm-dev download -f ./test/data.txt -o ./test/test-input
+
+# run jawm 
+jawm fastqc.py -p ./test/fastqc.yaml
+
+# check the output
+ls ./test/test-output
 ```
