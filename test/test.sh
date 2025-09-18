@@ -87,24 +87,10 @@ echo "Runner: $RUNNER"
 echo "Dispatched: $DISPATCHED"
 echo "Override: $OVERRIDE"
 
-if [[ "$DISPATCHED" == true ]] ; then
-  echo "🚀 Dispatch mode active!"
-else
-  echo "⚙️  Normal run mode."
-fi
-
-if [[ "$OVERRIDE" == true ]] ; then
-  echo "⚡ Override enabled!"
-else
-  echo "🔒 Override disabled."
-fi
-
 # Display versions if provided
-echo "Modules Versions: ${MODULE_VERSIONS[@]:-None}"
-echo "Python Versions: ${PYTHON_VERSIONS[@]:-None}"
-echo "jawm Versions: ${JAWM_VERSIONS[@]:-None}"
-
-
+echo "Specified module Versions: ${MODULE_VERSIONS[@]:-None}"
+echo "Specified Python Versions: ${PYTHON_VERSIONS[@]:-None}"
+echo "Specified jawm Versions: ${JAWM_VERSIONS[@]:-None}"
 
 ############################################################
 # set paths
@@ -118,7 +104,7 @@ DIRPATH=$( dirname ${TESTPATH} )
 # download data
 ############################################################
 cd ${TESTPATH}
-mkdir test-input
+mkdir -p test-input
 while read -r _ filename url _ ;
 do
     if [ ! -f "./test-input/${filename}" ]; then
@@ -139,13 +125,13 @@ else
     # Install pyenv
     curl https://pyenv.run | bash
     echo "pyenv installed successfully."
-    # Add pyenv to shell config (bash example)
-    eval "$(pyenv init --path)"
-    eval "$(pyenv init -)"
-    eval "$(pyenv virtualenv-init -)"
-    source ~/.bashrc
 fi
 
+# Add pyenv to shell config (bash example)
+eval "$(pyenv init --path)"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+source ~/.bashrc
 
 ############################################################
 # installing different python versions
@@ -158,6 +144,10 @@ if [[ -z ${PYTHON_VERSIONS} ]] ; then
       | sort -V \
       | awk -F. '$2 >= 10 {ver=$1"."$2; patch[ver]=$3} END {for (v in patch) print v"."patch[v]}' \
       | sort -V)
+
+else 
+
+  PYTHON_VERSIONS="${PYTHON_VERSIONS[@]}"
   
 fi
 
@@ -167,10 +157,9 @@ for PYTHON_VERSION in ${PYTHON_VERSIONS} ;
             echo "Python $PYTHON_VERSION is already installed"
         else
             echo "Python $PYTHON_VERSION not found, installing..."
-            pyenv install "$PYTHON_VERSION"
+            pyenv install "$PYTHON_VERSION" || { echo "Python $PYTHON_VERSION could not be installed, removing it from the list" ; PYTHON_VERSIONS=$(echo "$PYTHON_VERSIONS" | sed -E "s/\b$PYTHON_VERSION\b//g" | xargs); }
         fi
 done
-
 
 ############################################################
 # get latest jawm tag and latest commit
@@ -178,9 +167,9 @@ done
 
 if [[ -z ${JAWM_VERSIONS} ]] ; then 
 
-  SHORT_JAWM_HASH=$(git ls-remote git@github.com/mpg-age-bioinformatics/jawm.git HEAD | awk '{print substr($1,1,7)}')
+  SHORT_JAWM_HASH=$(git ls-remote git@github.com:mpg-age-bioinformatics/jawm.git HEAD | awk '{print substr($1,1,7)}')
 
-  LATEST_JAWM_TAG=$(git ls-remote --tags git@github.com/mpg-age-bioinformatics/jawm.git \
+  LATEST_JAWM_TAG=$(git ls-remote --tags git@github.com:mpg-age-bioinformatics/jawm.git \
     | awk -F/ '{print $NF " " $1}' \
     | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+ ' \
     | sort -V \
@@ -188,6 +177,10 @@ if [[ -z ${JAWM_VERSIONS} ]] ; then
   LATEST_JAWM_TAG=$(echo $LATEST_JAWM_TAG | awk '{print $1}')
 
   JAWM_VERSIONS="${SHORT_JAWM_HASH} ${LATEST_JAWM_TAG}" 
+
+else 
+
+  JAWM_VERSIONS="${JAWM_VERSIONS[@]}"
 
 fi
 
@@ -197,31 +190,36 @@ fi
 ############################################################
 for PYTHON_VERSION in ${PYTHON_VERSIONS} ; 
     do
-        for JAWM_VERSION in ${SHORT_JAWM_HASH} ${LATEST_JAWM_TAG} ;
+        for JAWM_VERSION in ${JAWM_VERSIONS} ;
             do
-                ENV_NAME="jawm-${JAWM_VERSION}"
-                # Check if an environment with this name exists AND uses the specified Python version
-                EXISTS=$(pyenv virtualenvs --bare --skip-aliases | while read venv; do
-                    # Get the Python version used by this virtualenv
-                    VENV_PYTHON=$(pyenv prefix "$venv" 2>/dev/null)/bin/python
-                    if [ -f "$VENV_PYTHON" ]; then
-                        VENV_VERSION=$($VENV_PYTHON -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}")')
-                        if [ "$venv" = "$ENV_NAME" ] && [ "$VENV_VERSION" = "$PYTHON_VERSION" ]; then
-                            echo "$venv"
-                        fi
-                    fi
-                done)
+                ENV_NAME="py${PYTHON_VERSION}-jawm-${JAWM_VERSION}"
+                # # Check if an environment with this name exists AND uses the specified Python version
+                # EXISTS=$(pyenv virtualenvs --bare --skip-aliases | while read venv; do
+                #     # Get the Python version used by this virtualenv
+                #     VENV_PYTHON=$(pyenv prefix "$venv" 2>/dev/null)/bin/python
+                #     if [ -f "$VENV_PYTHON" ]; then
+                #         VENV_VERSION=$($VENV_PYTHON -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}")')
+                #         if [ "$venv" = "$ENV_NAME" ] && [ "$VENV_VERSION" = "$PYTHON_VERSION" ]; then
+                #             echo "$venv"
+                #         fi
+                #     fi
+                # done)
 
-                if [ -n "$EXISTS" ]; then
-                    echo "Virtual environment '$ENV_NAME' already exists with Python $PYTHON_VERSION"
+                if pyenv virtualenvs --bare | grep -qx "$ENV_NAME"; then
+                    echo "Virtual environment '$ENV_NAME' already exists."
                 else
-                    echo "Creating virtual environment '$ENV_NAME' with Python $PYTHON_VERSION"
+                    echo "Creating virtual environment '$ENV_NAME'"
                     pyenv virtualenv "$PYTHON_VERSION" "$ENV_NAME"
                 fi
 
-                pyenv activate "$PYTHON_VERSION" "$ENV_NAME"
+                pyenv activate "$ENV_NAME"
 
-                pip install git+ssh://git@github.com/mpg-age-bioinformatics/jawm.git@${JAWM_VERSION}#egg=packagename
+                if pyenv shell "$ENV_NAME" >/dev/null 2>&1 && pyenv exec pip show jawm >/dev/null 2>&1; then
+                    echo "Package 'jawm@${JAWM_VERSION}' is installed in $ENV_NAME."
+                else
+                    echo "Installing 'jawm@${JAWM_VERSION}' in $ENV_NAME."
+                    pip install git+ssh://git@github.com/mpg-age-bioinformatics/jawm.git@${JAWM_VERSION}
+                fi
 
                 pyenv deactivate
 
@@ -232,6 +230,8 @@ done
 ############################################################
 # set tag
 ############################################################
+
+echo "repo tag"
 
 if [[ -z ${MODULE_VERSIONS} ]] ; then 
 
@@ -244,15 +244,31 @@ if [[ -z ${MODULE_VERSIONS} ]] ; then
 
             if [[ "$DISPATCHED" == true ]]; then
 
+                echo "1"
                 # if running locally and dispach is true than also test the lates released tag
-                VERSION_TAG=$(git describe --tags --abbrev=0)
+                VERSION_TAG=$(git describe --tags --abbrev=0 || echo "")
+                echo "2: ${VERSION_TAG}"
 
             fi
+
+            MODULE_VERSIONS="${CODE_TAG} ${VERSION_TAG}"
 
 
     elif [[ "${RUNNER}" == "github" ]] ; 
         then
-            if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+
+            VERSION_TAG=${GITHUB_REF_NAME}
+            echo "VERSION_TAG=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+
+            # if running on github but not driven by a new tag also test the latest commit
+            CODE_TAG=$(git rev-parse --short HEAD)
+            echo "CODE_TAG=${CODE_TAG}" >> $GITHUB_ENV
+
+            if [[ "$DISPATCHED" == true ]]; then
+
+                MODULE_VERSIONS="${CODE_TAG} ${VERSION_TAG}"
+
+            elif [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
 
                 # running on GitHub and tesing the latest tag
                 VERSION_TAG=${GITHUB_REF_NAME}
@@ -265,17 +281,22 @@ if [[ -z ${MODULE_VERSIONS} ]] ; then
                 echo "CODE_TAG=${CODE_TAG}" >> $GITHUB_ENV
 
             fi
+
+
     fi
+
+else 
+
+    MODULE_VERSIONS="${MODULE_VERSIONS[@]}"
 
 fi
 
-MODULE_VERSIONS="${CODE_TAG} ${VERSION_TAG}"
 
 for PYTHON_VERSION in ${PYTHON_VERSIONS} ; do
     for JAWM_VERSION in ${JAWM_VERSIONS} ; do
 
-        ENV_NAME="jawm-${JAWM_VERSION}"
-        pyenv activate "$PYTHON_VERSION" "$ENV_NAME"
+        ENV_NAME="py${PYTHON_VERSION}-jawm-${JAWM_VERSION}"
+        pyenv activate "$ENV_NAME"
 
         for MODULE_VERSION in ${MODULE_VERSIONS} ; do
             OUTPUT_PATH=${TESTPATH%/}/test-output/py${PYTHON_VERSION}_jawm${JAWM_VERSION}_mod${MODULE_VERSION}
@@ -288,20 +309,37 @@ for PYTHON_VERSION in ${PYTHON_VERSIONS} ; do
 
             cd ${DIRPATH}
 
-            git checkout ${MODULE_VERSION}
+            if [ "${MODULE_VERSION}" != "current" ] ; then git checkout ${MODULE_VERSION} ; fi
 
+            echo $(pwd)
+            echo ${TESTS_FILE}
 
-            while IFS=$'\t' read -r MOD WORKFLOW PARAM NAME STORED_HASH; do
-                echo "NAME: $NAME"
-                echo "WORKFLOW: $WORKFLOW"
+            while IFS=';' read -r MOD WORKFLOW PARAM NAME STORED_HASH; do
+                # Skip empty lines or lines starting with #
+                [[ -z "$MOD" || "$MOD" == \#* ]] && continue
+
+                # Remove surrounding quotes from NAME
+                NAME="${NAME%\"}"
+                NAME="${NAME#\"}"
+
                 echo "MODULE: $MOD"
+                echo "WORKFLOW: $WORKFLOW"
                 echo "PARAMETERS: $PARAM"
+                echo "NAME: $NAME"
+                echo "STORED HASH: $STORED_HASH"
                 echo "------"
 
                 #jawm ${MOD} ${WORKFLOW} -l ./test/logs -p $PARAM
                 jawm ${MOD} -l ./test/logs -p $PARAM
 
-                NEW_HASH=$(cat ./test/logs/jawm_hashes/$(basename ${MOD}_${WORKFLOW} ).hash )
+                # need to implement when <HASH>
+                # need to implement -o usage 
+
+                # NEW_HASH=$(cat ./test/logs/jawm_hashes/$(basename ${MOD}_${WORKFLOW} ).hash )
+                # ORIGINAL_LINE="$MOD;$WORKFLOW;$PARAM;$NAME;$STORED_HASH"
+                # NEW_LINE="$MOD;$WORKFLOW;$PARAM;$NAME;$NEW_HASH"
+
+                # sed -i "s|^${ORIGINAL_LINE}$|${NEW_LINE}|" ${TESTS_FILE}
 
             done < ${TESTS_FILE}
 

@@ -1,1 +1,2 @@
-fastqc.py    main   ./test/fastqc.yaml  "Main workflow test"
+fastqc.py;main;./test/fastqc.yaml;"Main workflow test";${a}
+# blank last line required
