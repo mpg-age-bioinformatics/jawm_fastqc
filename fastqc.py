@@ -55,16 +55,92 @@ fastqc {{extra_args}} -t {{ncores}} -o {{mk.output}} {{map.f}}
 # }}}
 
 
+
 if __name__ == "__main__":
     import sys
+    import argparse
 
-    # execute process
-    fastqc.execute()
 
-    # wait for all processes to complete
-    jawm.Process.wait()
+    ######################################################################
+    # move this function to jawm utils
+    def parse_arguments(available_workflows=["main"]):
+        """
+        Parse command-line arguments to determine which workflows to run.
 
-    # print the output
-    print(fastqc.get_output())
+        This function uses argparse to read a positional argument `workflows`
+        from the command line. The argument can be a single submodule name
+        or a comma-separated list of workflows. It validates the input
+        against a list of available workflows and exits if any invalid
+        workflows are provided.
 
-    sys.exit(0)
+        Parameters
+        ----------
+        available_workflows : list of str, optional
+            A list of valid submodule names that the user is allowed to run.
+            Default is ["main"].
+
+        Returns
+        -------
+        list of str
+            A list of submodule names that were specified in the command line
+            and validated against `available_workflows`.
+
+        Raises
+        ------
+        SystemExit
+            If any of the provided workflows are not found in `available_workflows`,
+            the function prints an error message and exits the program.
+
+        Examples
+        --------
+        Command line usage:
+            $ python my_program.py main
+            $ python my_program.py main,submodule2
+
+        In code:
+            workflows = parse_arguments(["main", "submodule2"])
+        """
+
+        parser = argparse.ArgumentParser(
+            description="A jawm fastqc module. Usage"
+        )
+        parser.add_argument(
+            "workflows",
+            type=str,
+            help="The workflows to run. Eg. 'main' for running all modules or a comma separated list of workflows."
+        )
+
+        args=parser.parse_args()
+        workflows=args.workflows
+        if "," in workflows :
+            workflows=workflows.split(",")
+        else:
+            workflows=[workflows]
+        
+        not_found=[ s for s in workflows if s not in available_workflows ] 
+
+        if not_found :
+            print("The following workflows could not be found:", ",".join(not_found) )
+            print("Available workflows:", ",".join(available_workflows) )
+            sys.exit(1)
+
+        return workflows
+
+    ######################################################################
+
+    # workflows = jawm.utils.parse_arguments(["main","fastqc"])
+
+    workflows = parse_arguments(["main","fastqc"])
+
+    if "main" in workflows or "fastqc" in workflows :
+
+        # execute process
+        fastqc.execute()
+
+        # wait for all processes to complete
+        jawm.Process.wait()
+
+        # print the output
+        print(fastqc.get_output())
+
+sys.exit(0)
