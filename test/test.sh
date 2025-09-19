@@ -90,8 +90,8 @@ while [[ $# -gt 0 ]]; do
 
       echo "./test.sh -d -r local --skip_python_versions 3.14.0"
       echo "./test.sh -r local -p 3.13.7"
-      echo "./test.sh -r local -p system -j system --jawm_repo ~/jawm"
-      echo "./test.sh -r local -p 3.13.7 -j system --jawm_repo ~/jawm"
+      echo "./test.sh -r local -p system -j local --jawm_repo ~/jawm"
+      echo "./test.sh -r local -p 3.13.7 -j local --jawm_repo ~/jawm"
 
       exit 0
       ;;
@@ -260,7 +260,7 @@ for PYTHON_VERSION in ${PYTHON_VERSIONS} ;
 
                 export PATH=~/.pyenv/versions/${ENV_NAME}/bin/:${PATH}
 
-                if [[ "${JAWM_VERSION}" == "system" ]] ; then 
+                if [[ "${JAWM_VERSION}" == "local" ]] ; then 
 
                     if [[ -d "${JAWM_REPO}" ]] ; then
 
