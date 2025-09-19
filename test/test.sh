@@ -113,6 +113,14 @@ if [[ "$RUNNER" != "local" && "$RUNNER" != "github" ]] ; then
   exit 1
 fi
 
+if [[ -d ${JAWM_REPO} ]] ; then 
+
+    echo "WARNING: You have given a local path to jawm's source code." 
+    echo "         Fixing -j|--jawm_versions to local"
+    JAWM_VERSIONS=("local")
+
+fi
+
 # Example usage
 echo "Runner: $RUNNER"
 echo "Dispatched: $DISPATCHED"
