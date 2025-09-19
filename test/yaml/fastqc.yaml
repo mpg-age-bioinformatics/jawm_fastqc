@@ -2,13 +2,17 @@
   name: "fastqc"
   container: "mpgagebioinformatics/fastqc:0.11.9"
   environment: "docker"
-  # automated_mount: False
-  # docker_run_as_user: True
-  # environment_docker:
-      # "-v": ["/nexus:/nexus"]
+  automated_mount: False
+  docker_run_as_user: True
+  environment_docker:
+      "-v": ["/nexus:/nexus"]
   parallel: False
   var:
     extra_args: ""
-    mk.output: "test/test-output"
+    mk.output: "./test/test-output"
     map.f: "test/test-input/test.fastq.gz"
     ncores: "2"
+- scope: hash
+  include: ./test/test-output/test_fastqc.html
+  overwrite: true
+

@@ -7,14 +7,19 @@
 # Default values
 RUNNER=""
 DISPATCHED=false
-OVERRIDE=true   # default is true
+OVERRIDE=false   # default is true
+IGNORE=false
+
 # Single tests file
 TESTS_FILE="./test/tests.txt"
+DOWNLOADS_FILE="./test/data.txt"
+LOGS_FOLDER="./test/logs"
 
 # Arrays for versions
 MODULE_VERSIONS=()
 PYTHON_VERSIONS=()
 JAWM_VERSIONS=()
+SKIP_PYTHON_VERSIONS=()
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -35,6 +40,10 @@ while [[ $# -gt 0 ]]; do
       OVERRIDE=false
       shift
       ;;
+    -i|--ignore)
+      IGNORE=true
+      shift
+      ;;
     -m|--module_versions)
       shift
       while [[ $# -gt 0 && $1 != -* ]]; do
@@ -49,6 +58,13 @@ while [[ $# -gt 0 ]]; do
         shift
       done
       ;;
+    --skip_python_versions)
+      shift
+      while [[ $# -gt 0 && $1 != -* ]]; do
+        SKIP_PYTHON_VERSIONS+=("$1")
+        shift
+      done
+      ;;
     -j|--jawm_versions)
       shift
       while [[ $# -gt 0 && $1 != -* ]]; do
@@ -60,8 +76,16 @@ while [[ $# -gt 0 ]]; do
       TESTS_FILE="$2"
       shift 2
       ;;
+    --downloads_file)
+      DOWNLOADS_FILE="$(readlink -f $2)"
+      shift 2
+      ;;
     -h|--help)
-      echo "Usage: $0 -r <local|github> [-d|--dispatch] [-o|--override|--no-override] [-m module_versions] [-p python_versions] [-j jawm_versions] [-t tests_file]"
+      echo "Usage: $0 -r <local|github> [-d|--dispatch] [-o|--override|--no-override] [-i|--ignore][-m module_versions] [-p python_versions] [--skip_python_versions] [-j jawm_versions] [-t tests_file] [--downloads_file]"
+
+      echo "./test.sh -d -r local --skip_python_versions 3.14.0"
+      echo "./test.sh -r local -p 3.13.7"
+
       exit 0
       ;;
     *)
@@ -85,11 +109,15 @@ fi
 # Example usage
 echo "Runner: $RUNNER"
 echo "Dispatched: $DISPATCHED"
-echo "Override: $OVERRIDE"
+echo "Override existing hashes: $OVERRIDE"
+echo "Ignore failed tests: $IGNORE"
+echo "Test file:" ${TESTS_FILE:-None}
+echo "Downloads file:" ${DOWNLOADS_FILE:-None}
 
 # Display versions if provided
 echo "Specified module Versions: ${MODULE_VERSIONS[@]:-None}"
 echo "Specified Python Versions: ${PYTHON_VERSIONS[@]:-None}"
+echo "Skip Python Versions: ${SKIP_PYTHON_VERSIONS[@]:-None}"
 echo "Specified jawm Versions: ${JAWM_VERSIONS[@]:-None}"
 
 ############################################################
@@ -103,16 +131,20 @@ DIRPATH=$( dirname ${TESTPATH} )
 ############################################################
 # download data
 ############################################################
-cd ${TESTPATH}
-mkdir -p test-input
-while read -r _ filename url _ ;
-do
-    if [ ! -f "./test-input/${filename}" ]; then
-    wget -O "./test-input/${filename}" "$url"
-    fi
-done < data.txt
-awk '{print $1, "./test-input/"$2}' data.txt | md5sum -c -
 
+if [ -f ${DOWNLOADS_FILE} ] ; then
+
+  cd ${TESTPATH}
+  mkdir -p test-input
+  while read -r _ filename url _ ;
+  do
+      if [ ! -f "./test-input/${filename}" ]; then
+        wget -O "./test-input/${filename}" "$url"
+      fi
+  done < ${DOWNLOADS_FILE}
+  awk '{print $1, "./test-input/"$2}' data.txt | md5sum -c -
+
+fi
 
 ############################################################
 # preparing pyenv
@@ -131,6 +163,7 @@ fi
 eval "$(pyenv init --path)"
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
+echo "sourcing your ~/.bashrc"
 source ~/.bashrc
 
 ############################################################
@@ -151,6 +184,13 @@ else
   
 fi
 
+for skip in ${SKIP_PYTHON_VERSIONS[@]} ; do
+
+  PYTHON_VERSIONS=$(echo "$PYTHON_VERSIONS" | sed -E "s/\b$skip\b//g" | xargs)
+  
+done
+
+
 for PYTHON_VERSION in ${PYTHON_VERSIONS} ; 
     do
         if pyenv versions --bare | grep -qx "$PYTHON_VERSION"; then
@@ -160,6 +200,8 @@ for PYTHON_VERSION in ${PYTHON_VERSIONS} ;
             pyenv install "$PYTHON_VERSION" || { echo "Python $PYTHON_VERSION could not be installed, removing it from the list" ; PYTHON_VERSIONS=$(echo "$PYTHON_VERSIONS" | sed -E "s/\b$PYTHON_VERSION\b//g" | xargs); }
         fi
 done
+
+echo "Your python versions and environments can be found under: ~/.pyenv/versions/"
 
 ############################################################
 # get latest jawm tag and latest commit
@@ -192,18 +234,7 @@ for PYTHON_VERSION in ${PYTHON_VERSIONS} ;
     do
         for JAWM_VERSION in ${JAWM_VERSIONS} ;
             do
-                ENV_NAME="py${PYTHON_VERSION}-jawm-${JAWM_VERSION}"
-                # # Check if an environment with this name exists AND uses the specified Python version
-                # EXISTS=$(pyenv virtualenvs --bare --skip-aliases | while read venv; do
-                #     # Get the Python version used by this virtualenv
-                #     VENV_PYTHON=$(pyenv prefix "$venv" 2>/dev/null)/bin/python
-                #     if [ -f "$VENV_PYTHON" ]; then
-                #         VENV_VERSION=$($VENV_PYTHON -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}")')
-                #         if [ "$venv" = "$ENV_NAME" ] && [ "$VENV_VERSION" = "$PYTHON_VERSION" ]; then
-                #             echo "$venv"
-                #         fi
-                #     fi
-                # done)
+                ENV_NAME="py${PYTHON_VERSION}-jawm${JAWM_VERSION}"
 
                 if pyenv virtualenvs --bare | grep -qx "$ENV_NAME"; then
                     echo "Virtual environment '$ENV_NAME' already exists."
@@ -212,10 +243,12 @@ for PYTHON_VERSION in ${PYTHON_VERSIONS} ;
                     pyenv virtualenv "$PYTHON_VERSION" "$ENV_NAME"
                 fi
 
+                #pyenv prefix "$ENV_NAME"
+
                 pyenv activate "$ENV_NAME"
 
                 if pyenv shell "$ENV_NAME" >/dev/null 2>&1 && pyenv exec pip show jawm >/dev/null 2>&1; then
-                    echo "Package 'jawm@${JAWM_VERSION}' is installed in $ENV_NAME."
+                    echo "'jawm@${JAWM_VERSION}' is already installed in $ENV_NAME."
                 else
                     echo "Installing 'jawm@${JAWM_VERSION}' in $ENV_NAME."
                     pip install git+ssh://git@github.com/mpg-age-bioinformatics/jawm.git@${JAWM_VERSION}
@@ -231,8 +264,6 @@ done
 # set tag
 ############################################################
 
-echo "repo tag"
-
 if [[ -z ${MODULE_VERSIONS} ]] ; then 
 
     if [[ "${RUNNER}" == "local" ]] ; 
@@ -244,10 +275,8 @@ if [[ -z ${MODULE_VERSIONS} ]] ; then
 
             if [[ "$DISPATCHED" == true ]]; then
 
-                echo "1"
                 # if running locally and dispach is true than also test the lates released tag
                 VERSION_TAG=$(git describe --tags --abbrev=0 || echo "")
-                echo "2: ${VERSION_TAG}"
 
             fi
 
@@ -295,24 +324,25 @@ fi
 for PYTHON_VERSION in ${PYTHON_VERSIONS} ; do
     for JAWM_VERSION in ${JAWM_VERSIONS} ; do
 
-        ENV_NAME="py${PYTHON_VERSION}-jawm-${JAWM_VERSION}"
+        ENV_NAME="py${PYTHON_VERSION}-jawm${JAWM_VERSION}"
         pyenv activate "$ENV_NAME"
+        export PATH=~/.pyenv/versions/${PYTHON_VERSION}/envs/${ENV_NAME}/bin/:${PATH}
 
         for MODULE_VERSION in ${MODULE_VERSIONS} ; do
-            OUTPUT_PATH=${TESTPATH%/}/test-output/py${PYTHON_VERSION}_jawm${JAWM_VERSION}_mod${MODULE_VERSION}
+            # OUTPUT_PATH=${TESTPATH%/}/test-output/py${PYTHON_VERSION}_jawm${JAWM_VERSION}_mod${MODULE_VERSION}
 
-            if [[ "$OVERRIDE" == true ]] ; then
-                if [[ -d "${OUTPUT_PATH}" ]] ; then rm -rf ${OUTPUT_PATH} ; fi                       
-            fi
+            # if [[ "$OVERRIDE" == true ]] ; then
+            #     if [[ -d "${OUTPUT_PATH}" ]] ; then rm -rf ${OUTPUT_PATH} ; fi                       
+            # fi
 
-            if [[ ! -d "${OUTPUT_PATH}" ]] ; then mkdir -p ${OUTPUT_PATH} ; fi
+            # if [[ ! -d "${OUTPUT_PATH}" ]] ; then mkdir -p ${OUTPUT_PATH} ; fi
 
             cd ${DIRPATH}
 
             if [ "${MODULE_VERSION}" != "current" ] ; then git checkout ${MODULE_VERSION} ; fi
 
-            echo $(pwd)
-            echo ${TESTS_FILE}
+            rm -rf .${TESTS_FILE}.tmp
+            head -n 1 ${TESTS_FILE} > ${TESTS_FILE}.tmp
 
             while IFS=';' read -r MOD WORKFLOW PARAM NAME STORED_HASH; do
                 # Skip empty lines or lines starting with #
@@ -326,27 +356,84 @@ for PYTHON_VERSION in ${PYTHON_VERSIONS} ; do
                 echo "WORKFLOW: $WORKFLOW"
                 echo "PARAMETERS: $PARAM"
                 echo "NAME: $NAME"
-                echo "STORED HASH: $STORED_HASH"
+                echo "STORED HASH: ${STORED_HASH:-None}"
+                echo "PYTHON VERSION: ${PYTHON_VERSION}"
+                echo "JAWM VERSION: ${JAWM_VERSION}"
+                echo "MODULE VERSION: ${MODULE_VERSION}"
+                echo "JAWM COMMAND: jawm ${MOD} ${WORKFLOW} -l ${LOGS_FOLDER} -p $PARAM"
                 echo "------"
 
-                #jawm ${MOD} ${WORKFLOW} -l ./test/logs -p $PARAM
-                jawm ${MOD} -l ./test/logs -p $PARAM
+                FAILED=false
 
-                # need to implement when <HASH>
-                # need to implement -o usage 
+                if [[ ${IGNORE} == false ]] ; then
+                    jawm ${MOD} ${WORKFLOW} -l ${LOGS_FOLDER} -p $PARAM || { echo 'Error: jawm failed. Test failed.'; rm -rf ${TESTS_FILE}.tmp ; exit 1 ; }
+                else
+                    jawm ${MOD} ${WORKFLOW} -l ${LOGS_FOLDER} -p $PARAM || { echo 'Warning: jawm failed. Test failed.'; FAILED=true ; }
+                fi
 
-                # NEW_HASH=$(cat ./test/logs/jawm_hashes/$(basename ${MOD}_${WORKFLOW} ).hash )
-                # ORIGINAL_LINE="$MOD;$WORKFLOW;$PARAM;$NAME;$STORED_HASH"
-                # NEW_LINE="$MOD;$WORKFLOW;$PARAM;$NAME;$NEW_HASH"
 
-                # sed -i "s|^${ORIGINAL_LINE}$|${NEW_LINE}|" ${TESTS_FILE}
+                if [[ ${FAILED} == false ]] ; then
+
+                    NEW_HASH=$(cat ${LOGS_FOLDER}/jawm_hashes/$(basename ${MOD%.py}).hash )
+
+                    echo "Stored HASH:    ${STORED_HASH}"
+                    echo "Generated HASH: ${NEW_HASH}"
+                    
+                    if [[ "$STORED_HASH" == "" ]] ; then
+
+                        ORIGINAL_LINE="$MOD;$WORKFLOW;$PARAM;\"$NAME\";${NEW_HASH}"
+
+                        echo "$MOD;$WORKFLOW;$PARAM;\"$NAME\";${NEW_HASH}" >> ${TESTS_FILE}.tmp
+
+                    else
+
+                        if [[ "${NEW_HASH}" != "${STORED_HASH}" ]] ; then
+
+                            ORIGINAL_LINE="$MOD;$WORKFLOW;$PARAM;\"$NAME\";$STORED_HASH"
+                            
+                            echo "Warning: Hashes do not match!"
+
+                            if [[ ${OVERRIDE} == true ]] ; then
+
+                                echo "Overwriting existing HASH."
+
+                                echo "$MOD;$WORKFLOW;$PARAM;"$NAME";${NEW_HASH}" >> ${TESTS_FILE}.tmp
+
+                            else
+
+                                if [[ ${IGNORE} == false ]] ; then
+
+                                  echo "Error: Hashes do not match! Test failed."
+                                  rm -rf ${TESTS_FILE}.tmp
+                                  exit 1
+
+                                else 
+
+                                  echo "Keeping stored HASH."
+                                  echo "$MOD;$WORKFLOW;$PARAM;\"$NAME\";${STORED_HASH}" >> ${TESTS_FILE}.tmp
+
+                                fi
+
+                            fi
+
+                        else 
+
+                            echo "$MOD;$WORKFLOW;$PARAM;\"$NAME\";${STORED_HASH}" >> ${TESTS_FILE}.tmp
+
+                        fi
+
+                      fi
+
+                fi
 
             done < ${TESTS_FILE}
 
-            # get the different tests to perform from tests.txt and run jawm 
-
+            tail -n 1 ${TESTS_FILE} >> ${TESTS_FILE}.tmp
+            mv ${TESTS_FILE}.tmp ${TESTS_FILE}
+   
         done
 
         pyenv deactivate
+
     done
 done

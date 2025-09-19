@@ -58,12 +58,13 @@ fastqc {{extra_args}} -t {{ncores}} -o {{mk.output}} {{map.f}}
 
 if __name__ == "__main__":
     import sys
+    import os
     import argparse
 
 
     ######################################################################
     # move this function to jawm utils
-    def parse_arguments(available_workflows=["main"]):
+    def parse_arguments(available_workflows=["main"],description="A jawm module.",extra_args={}):
         """
         Parse command-line arguments to determine which workflows to run.
 
@@ -78,6 +79,14 @@ if __name__ == "__main__":
         available_workflows : list of str, optional
             A list of valid submodule names that the user is allowed to run.
             Default is ["main"].
+
+        description: str, 
+            The module description.
+            Default is "A jawm module.".
+
+        extra_args: dictionary
+            An { "arg":"Help text"} dictionary.
+            Default is {}.
 
         Returns
         -------
@@ -102,20 +111,42 @@ if __name__ == "__main__":
         """
 
         parser = argparse.ArgumentParser(
-            description="A jawm fastqc module. Usage"
+            description=description
         )
+
         parser.add_argument(
             "workflows",
-            type=str,
+            nargs="+",
             help="The workflows to run. Eg. 'main' for running all modules or a comma separated list of workflows."
         )
 
-        args=parser.parse_args()
+        for arg in list(extra_args.keys()) :
+             parser.add_argument(arg, help=extra_args[arg] )
+
+        args, unknown_args=parser.parse_known_args()
+                
         workflows=args.workflows
-        if "," in workflows :
-            workflows=workflows.split(",")
-        else:
-            workflows=[workflows]
+
+        script_name = os.path.basename(sys.argv[0])
+        workflows=[ s for s in workflows if s != script_name ]
+        if not workflows :
+            workflows=["main"]
+        else :
+            workflows=workflows[0]
+
+            if "," in workflows :
+                workflows=workflows.split(",")
+            else:
+                workflows=[workflows]
+
+        
+        ######## DEV (while waiting for jawm to take arguments accordingly)
+        
+        # workflows=[ s.replace("fastqc.py","main") for s in workflows ]
+        # workflows=[ s for s in workflows if s != "fastq.py" ]
+        # print("Workflows:", workflows)
+
+        ########
         
         not_found=[ s for s in workflows if s not in available_workflows ] 
 
@@ -124,13 +155,13 @@ if __name__ == "__main__":
             print("Available workflows:", ",".join(available_workflows) )
             sys.exit(1)
 
-        return workflows
+        return workflows, args, unknown_args
 
     ######################################################################
 
     # workflows = jawm.utils.parse_arguments(["main","fastqc"])
 
-    workflows = parse_arguments(["main","fastqc"])
+    workflows, args, unknown_args = parse_arguments(["main","fastqc"])
 
     if "main" in workflows or "fastqc" in workflows :
 
