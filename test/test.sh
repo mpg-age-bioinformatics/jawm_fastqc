@@ -14,6 +14,7 @@ IGNORE=false
 TESTS_FILE="./test/tests.txt"
 DOWNLOADS_FILE="./test/data.txt"
 LOGS_FOLDER="./test/logs"
+JAWM_REPO=github.com/mpg-age-bioinformatics/jawm.git
 
 # Arrays for versions
 MODULE_VERSIONS=()
@@ -72,6 +73,10 @@ while [[ $# -gt 0 ]]; do
         shift
       done
       ;;
+    --jawm_repo)
+      JAWM_REPO="$2"
+      shift 2
+      ;;
     -t|--tests_file)
       TESTS_FILE="$2"
       shift 2
@@ -81,10 +86,12 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     -h|--help)
-      echo "Usage: $0 -r <local|github> [-d|--dispatch] [-o|--override|--no-override] [-i|--ignore][-m module_versions] [-p python_versions] [--skip_python_versions] [-j jawm_versions] [-t tests_file] [--downloads_file]"
+      echo "Usage: $0 -r <local|github> [-d|--dispatch] [-o|--override|--no-override] [-i|--ignore][-m module_versions] [-p python_versions] [--skip_python_versions] [-j jawm_versions] [--jawm_repo] [-t tests_file] [--downloads_file]"
 
       echo "./test.sh -d -r local --skip_python_versions 3.14.0"
       echo "./test.sh -r local -p 3.13.7"
+      echo "./test.sh -r local -p system -j system --jawm_repo ~/jawm"
+      echo "./test.sh -r local -p 3.13.7 -j system --jawm_repo ~/jawm"
 
       exit 0
       ;;
@@ -113,6 +120,7 @@ echo "Override existing hashes: $OVERRIDE"
 echo "Ignore failed tests: $IGNORE"
 echo "Test file:" ${TESTS_FILE:-None}
 echo "Downloads file:" ${DOWNLOADS_FILE:-None}
+echo "jawm repo/folder:" ${JAWM_REPO}
 
 # Display versions if provided
 echo "Specified module Versions: ${MODULE_VERSIONS[@]:-None}"
@@ -193,6 +201,9 @@ done
 
 for PYTHON_VERSION in ${PYTHON_VERSIONS} ; 
     do
+
+        if [[ "${PYTHON_VERSION}" == "system" ]] ; then continue ; fi
+
         if pyenv versions --bare | grep -qx "$PYTHON_VERSION"; then
             echo "Python $PYTHON_VERSION is already installed"
         else
@@ -247,12 +258,29 @@ for PYTHON_VERSION in ${PYTHON_VERSIONS} ;
 
                 pyenv activate "$ENV_NAME"
 
-                if pyenv shell "$ENV_NAME" >/dev/null 2>&1 && pyenv exec pip show jawm >/dev/null 2>&1; then
-                    echo "'jawm@${JAWM_VERSION}' is already installed in $ENV_NAME."
-                else
-                    echo "Installing 'jawm@${JAWM_VERSION}' in $ENV_NAME."
-                    pip install git+ssh://git@github.com/mpg-age-bioinformatics/jawm.git@${JAWM_VERSION}
+                export PATH=~/.pyenv/versions/${ENV_NAME}/bin/:${PATH}
+
+                if [[ "${JAWM_VERSION}" == "system" ]] ; then 
+
+                    if [[ -d "${JAWM_REPO}" ]] ; then
+
+                        echo "Installing jawm from ${JAWM_REPO} in $ENV_NAME."
+                        pip install --force-reinstall ${JAWM_REPO}
+
+                    fi
+
+                else 
+
+                    if pyenv shell "$ENV_NAME" >/dev/null 2>&1 && pyenv exec pip show jawm >/dev/null 2>&1; then
+                        echo "'jawm@${JAWM_VERSION}' is already installed in $ENV_NAME."
+                    else
+                        echo "Installing 'jawm@${JAWM_VERSION}' in $ENV_NAME."
+                        pip install git+ssh://git@${JAWM_REPO}@${JAWM_VERSION}
+                    fi
+
                 fi
+
+                echo $(which jawm)
 
                 pyenv deactivate
 
@@ -326,7 +354,7 @@ for PYTHON_VERSION in ${PYTHON_VERSIONS} ; do
 
         ENV_NAME="py${PYTHON_VERSION}-jawm${JAWM_VERSION}"
         pyenv activate "$ENV_NAME"
-        export PATH=~/.pyenv/versions/${PYTHON_VERSION}/envs/${ENV_NAME}/bin/:${PATH}
+        export PATH=~/.pyenv/versions/${ENV_NAME}/bin/:${PATH}
 
         for MODULE_VERSION in ${MODULE_VERSIONS} ; do
             # OUTPUT_PATH=${TESTPATH%/}/test-output/py${PYTHON_VERSION}_jawm${JAWM_VERSION}_mod${MODULE_VERSION}
