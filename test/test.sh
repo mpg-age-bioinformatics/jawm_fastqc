@@ -253,7 +253,7 @@ for PYTHON_VERSION in ${PYTHON_VERSIONS} ;
     do
         for JAWM_VERSION in ${JAWM_VERSIONS} ;
             do
-                ENV_NAME="py${PYTHON_VERSION}-jawm${JAWM_VERSION}"
+                ENV_NAME="py${PYTHON_VERSION}-jawm.${JAWM_VERSION}"
 
                 if pyenv virtualenvs --bare | grep -qx "$ENV_NAME"; then
                     echo "Virtual environment '$ENV_NAME' already exists."
@@ -360,7 +360,7 @@ fi
 for PYTHON_VERSION in ${PYTHON_VERSIONS} ; do
     for JAWM_VERSION in ${JAWM_VERSIONS} ; do
 
-        ENV_NAME="py${PYTHON_VERSION}-jawm${JAWM_VERSION}"
+        ENV_NAME="py${PYTHON_VERSION}-jawm.${JAWM_VERSION}"
         pyenv activate "$ENV_NAME"
         export PATH=~/.pyenv/versions/${ENV_NAME}/bin/:${PATH}
 

@@ -58,10 +58,11 @@ fastqc {{extra_args}} -t {{ncores}} -o {{mk.output}} {{map.f}}
 
 if __name__ == "__main__":
     import sys
+    from jawm.utils import workflow
 
-    workflows, args, unknown_args = jawm.utils.parse_arguments(["main","fastqc"],)
+    workflows, args, unknown_args = jawm.utils.parse_arguments(["main","fastqc","test"],)
 
-    if "main" in workflows or "fastqc" in workflows :
+    if workflow( ["main","fastqc","test"], workflows ) :
 
         # execute process
         fastqc.execute()
@@ -71,5 +72,9 @@ if __name__ == "__main__":
 
         # print the output
         print(fastqc.get_output())
+
+    if workflow( "test", workflows ) :
+        print("Test completed.")
+
 
 sys.exit(0)
