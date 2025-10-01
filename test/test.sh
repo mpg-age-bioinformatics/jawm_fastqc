@@ -33,6 +33,13 @@ while [[ $# -gt 0 ]]; do
       DISPATCHED=true
       shift
       ;;
+    -y|--yaml)
+      shift
+      while [[ $# -gt 0 && $1 != -* ]]; do
+        YAML_FILES+=("$1")
+        shift
+      done
+      ;;
     -o|--override)
       OVERRIDE=true
       shift
@@ -86,12 +93,12 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     -h|--help)
-      echo "Usage: $0 -r <local|github> [-d|--dispatch] [-o|--override|--no-override] [-i|--ignore][-m module_versions] [-p python_versions] [--skip_python_versions] [-j jawm_versions] [--jawm_repo] [-t tests_file] [--downloads_file]"
+      echo "Usage: $0 -r <local|github> [-d|--dispatch] [-y|--yaml] [-o|--override|--no-override] [-i|--ignore][-m module_versions] [-p python_versions] [--skip_python_versions] [-j jawm_versions] [--jawm_repo] [-t tests_file] [--downloads_file]"
 
       echo "./test.sh -d -r local --skip_python_versions 3.14.0"
       echo "./test.sh -r local -p 3.13.7"
-      echo "./test.sh -r local -p system -j local --jawm_repo ~/jawm"
-      echo "./test.sh -r local -p 3.13.7 -j local --jawm_repo ~/jawm"
+      echo "./test.sh -r local -p system --jawm_repo ~/jawm"
+      echo "./test.sh -r local -y ./yaml/build.yaml -p 3.13.7 --jawm_repo ~/jawm"
 
       exit 0
       ;;
@@ -124,6 +131,7 @@ fi
 # Example usage
 echo "Runner: $RUNNER"
 echo "Dispatched: $DISPATCHED"
+echo "Extra yaml files: ${YAML_FILES[@]:-None}"
 echo "Override existing hashes: $OVERRIDE"
 echo "Ignore failed tests: $IGNORE"
 echo "Test file:" ${TESTS_FILE:-None}
@@ -396,15 +404,15 @@ for PYTHON_VERSION in ${PYTHON_VERSIONS} ; do
                 echo "PYTHON VERSION: ${PYTHON_VERSION}"
                 echo "JAWM VERSION: ${JAWM_VERSION}"
                 echo "MODULE VERSION: ${MODULE_VERSION}"
-                echo "JAWM COMMAND: jawm ${MOD} ${WORKFLOW} -l ${LOGS_FOLDER} -p $PARAM"
+                echo "JAWM COMMAND: jawm ${MOD} ${WORKFLOW} -l ${LOGS_FOLDER} -p $PARAM ${YAML_FILES[@]}"
                 echo "------"
 
                 FAILED=false
 
                 if [[ ${IGNORE} == false ]] ; then
-                    jawm ${MOD} ${WORKFLOW} -l ${LOGS_FOLDER} -p $PARAM || { echo 'Error: jawm failed. Test failed.'; rm -rf ${TESTS_FILE}.tmp ; exit 1 ; }
+                    jawm ${MOD} ${WORKFLOW} -l ${LOGS_FOLDER} -p $PARAM "${YAML_FILES[@]}"|| { echo 'Error: jawm failed. Test failed.'; rm -rf ${TESTS_FILE}.tmp ; exit 1 ; }
                 else
-                    jawm ${MOD} ${WORKFLOW} -l ${LOGS_FOLDER} -p $PARAM || { echo 'Warning: jawm failed. Test failed.'; FAILED=true ; }
+                    jawm ${MOD} ${WORKFLOW} -l ${LOGS_FOLDER} -p $PARAM "${YAML_FILES[@]}" || { echo 'Warning: jawm failed. Test failed.'; FAILED=true ; }
                 fi
 
 
