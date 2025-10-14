@@ -1,18 +1,3 @@
-# ---
-# jupyter:
-#   jupytext:
-#     cell_markers: '{{{,}}}'
-#     text_representation:
-#       extension: .py
-#       format_name: light
-#       format_version: '1.5'
-#       jupytext_version: 1.17.0
-#   kernelspec:
-#     display_name: Python 3.10.8
-#     language: python
-#     name: py3.10.8
-# ---
-
 import jawm
 
 # {{{
@@ -52,8 +37,6 @@ fastqc {{extra_args}} -t {{ncores}} -o {{mk.output}} {{map.f}}
     # param_file=[ "yaml/apptainer.params.yaml" , "yaml/slurm.params.yaml" ],
   
 )
-# }}}
-
 
 
 if __name__ == "__main__":
@@ -77,4 +60,4 @@ if __name__ == "__main__":
         print("Test completed.")
 
 
-sys.exit(0)
+    sys.exit(0)
