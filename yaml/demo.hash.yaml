@@ -1,1 +1,1 @@
-include: "test/test-output"
+include: "./test/test-output"

@@ -10,7 +10,7 @@
   var:
     extra_args: ""
     mk.output: "./test/test-output"
-    map.f: "test/test-input/test.fastq.gz"
+    map.f: "./test/test-input/test.fastq.gz"
     ncores: "2"
 - scope: hash
   include: ./test/test-output/test_fastqc.html
