@@ -2,10 +2,10 @@
   name: "fastqc"
   container: "mpgagebioinformatics/fastqc:0.11.9"
   environment: "docker"
-  automated_mount: False
-  docker_run_as_user: True
-  environment_docker:
-      "-v": ["/nexus:/nexus"]
+  # automated_mount: False
+  # docker_run_as_user: True
+  # environment_docker:
+  #     "-v": ["/nexus:/nexus"]
   parallel: False
   var:
     extra_args: ""
