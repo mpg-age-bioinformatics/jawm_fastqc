@@ -43,7 +43,7 @@ if __name__ == "__main__":
     import sys
     from jawm.utils import workflow
 
-    workflows, args, unknown_args = jawm.utils.parse_arguments(["main","fastqc","test"],)
+    workflows, vars, args, unknown_args = jawm.utils.parse_arguments(["main","fastqc","test"],)
 
     if workflow( ["main","fastqc","test"], workflows ) :
 
