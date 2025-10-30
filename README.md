@@ -1,38 +1,24 @@
 # jawm_fastqc
 
-Command line usage:
+Installing jawm:
 ```
-jawm fastqc.py -v yaml/demo.vars.yaml -p yaml/docker.params.yaml 
-```
-
-Example yaml files:
-```
-$ cat yaml/demo.vars.yaml
-- scope: process
-  name: "fastqc"
-  var:
-    extra_args: ""
-    output: "test/test-output"
-    f: "test/test.fastq.gz"
-
-$ cat yaml/docker.params.yaml
-- scope: process
-  name: "fastqc"
-  container: "mpgagebioinformatics/fastqc:0.11.9"
-  environment: "docker"
-  parallel: False  
-  var:
-    ncores: "2" 
+pip install git+ssh://git@github.com/mpg-age-bioinformatics/jawm.git
 ```
 
-Testing (requires docker):
+For more information on jawm please visit jawm's repo on [GitHub.com](https://github.com/mpg-age-bioinformatics/jawm/tree/main).
+
+Example usage:
 ```
-# download test input data
-jawm-dev download -f ./test/data.txt -o ./test/test-input
+# clone this module
+git clone git@github.com:mpg-age-bioinformatics/jawm_fastqc.git
 
-# run jawm 
-jawm fastqc.py -p ./test/fastqc.yaml
+# download test data
+cd jawm_fastqc
+jawm-test -r download
 
-# check the output
-ls ./test/test-output
+# docker
+jawm fastqc.py fastqc -p ./yaml/docker.yaml
+
+# slurm & apptainer with multiple yaml files
+jawm fastqc.py fastqc -p ./yaml/vars.yaml ./yaml/hpc.yaml
 ```
