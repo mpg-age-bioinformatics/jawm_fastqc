@@ -22,3 +22,5 @@ jawm fastqc.py fastqc -p ./yaml/docker.yaml
 # slurm & apptainer with multiple yaml files
 jawm fastqc.py fastqc -p ./yaml/vars.yaml ./yaml/hpc.yaml
 ```
+
+Additional jawm workflows are available [here (GitHub.com)](https://github.com/mpg-age-bioinformatics?q=jawm_&type=all&language=&sort=).
