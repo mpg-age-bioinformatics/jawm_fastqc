@@ -1,0 +1,12 @@
+- scope: process
+  name: fastqc
+  environment: "docker"
+  automated_mount: False
+  docker_run_as_user: True
+  environment_docker:
+      "-v": ["/nexus:/nexus"]
+  parallel: False
+  var:
+    ncores: 2
+    mk.output: "/nexus/posix0/MAGE-flaski/service/posit/home/jboucas/multiqc/jawm_multiqc/test/test-input/fastqc_output"
+    map.fastq_folder: "/nexus/posix0/MAGE-flaski/service/posit/home/jboucas/jawm_kallisto/test/test-input"

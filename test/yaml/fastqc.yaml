@@ -1,5 +1,5 @@
 - scope: process
-  name: "fastqc"
+  name: fastqc
   container: "mpgagebioinformatics/fastqc:0.11.9"
   environment: "docker"
   # automated_mount: False

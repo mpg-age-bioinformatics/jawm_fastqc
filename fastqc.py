@@ -1,10 +1,12 @@
 import jawm
+import os
 
 # {{{
 fastqc=jawm.Process( 
     name="fastqc",
+    when=lambda p: not os.path.isfile( os.path.join( p.var["output"], os.path.basename( p.var["f"] ).split(".fastq")[0]+"_fastqc.html" )  ) ,
     script="""#!/bin/bash
-fastqc {{extra_args}} -t {{ncores}} -o {{mk.output}} {{map.f}}
+fastqc {{extra_args}} -t {{ncores}} -o {{output}} {{f}}
 """,
 
     # example arguments :
@@ -17,18 +19,17 @@ fastqc {{extra_args}} -t {{ncores}} -o {{mk.output}} {{map.f}}
     # },
     
     # manager="slurm",
-    # manager_slurm={
-    #     "-p":"cluster,dedicated", 
-    #     "--mem":"20GB", 
-    #     "-t":"1:00:00", 
-    #     "-c":"8" 
-    # },
+    manager_slurm={
+        "--mem":"20GB", 
+        "-t":"1:00:00", 
+        "-c":"4" 
+    },
     
     # container="docker://mpgagebioinformatics/fastqc:0.11.9",
     # environmnent="apptainer",
     # environment_apptainer={ '-B': [input_file, output_folder] }
     
-    # container="mpgagebioinformatics/fastqc:0.11.9",
+    container="mpgagebioinformatics/fastqc:0.11.9",
     # environmnent="docker",
     # environment_docker={ '-v': [input_file, output_folder] },
 
@@ -42,19 +43,44 @@ fastqc {{extra_args}} -t {{ncores}} -o {{mk.output}} {{map.f}}
 if __name__ == "__main__":
     import sys
     from jawm.utils import workflow
+    from pathlib import Path
 
     workflows, vars, args, unknown_args = jawm.utils.parse_arguments(["main","fastqc","test"],)
 
     if workflow( ["main","fastqc","test"], workflows ) :
 
-        # execute process
-        fastqc.execute()
+        if "f" in fastqc.var.keys() :
+            if fastqc.var["f"] != "" : 
 
-        # wait for all processes to complete
-        jawm.Process.wait()
+                print( "Found:", fastqc.var["f"] )
 
-        # print the output
-        print(fastqc.get_output())
+                # execute process
+                fastqc.execute()
+
+                # wait for all processes to complete
+                jawm.Process.wait()
+
+                # print the output
+                print(fastqc.get_output())
+
+
+        if "fastq_folder" in fastqc.var.keys() :
+            if fastqc.var["fastq_folder"] != "" :
+
+                read_files = list(Path( fastqc.var["fastq_folder"] ).glob(f'*fastq*'))
+
+                fastqc_jobs=[]
+
+                for f in read_files :
+
+                    fastqc_=fastqc.clone()
+                    fastqc_.var["map.f"]=f
+                    fastqc_.execute()
+                    fastqc_jobs.append(fastqc_.hash)
+
+                jawm.Process.wait( fastqc_jobs )
+
+
 
     if workflow( "test", workflows ) :
         print("Test completed.")
