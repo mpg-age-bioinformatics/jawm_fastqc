@@ -13,6 +13,7 @@
     map.f: "./test/test-input/test.fastq.gz"
     ncores: "2"
     read1_sufix: ".fastq.gz"
+    map.test: "/nexus"
     # map.fastq_folder: "./test/test-input/"
 - scope: hash
   include: ./test/test-output/test_fastqc.html
