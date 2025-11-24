@@ -4,7 +4,7 @@ import os
 # {{{
 fastqc=jawm.Process( 
     name="fastqc",
-    when=lambda p: not os.path.isfile( os.path.join( p.var["output"], os.path.basename( p.var["f"] ).split(".fastq")[0]+"_fastqc.html" )  ) ,
+    when=lambda p: not os.path.isfile( os.path.join( p.var["output"], os.path.basename( str(p.var["f"]).lstrip().split(" ")[0].split("{{read1_sufix}}")[0] )+"_fastqc.html" )  ) ,
     script="""#!/bin/bash
 fastqc {{extra_args}} -t {{ncores}} -o {{output}} {{f}}
 """,
@@ -67,7 +67,7 @@ if __name__ == "__main__":
         if "fastq_folder" in fastqc.var.keys() :
             if fastqc.var["fastq_folder"] != "" :
 
-                read_files = list(Path( fastqc.var["fastq_folder"] ).glob(f'*fastq*'))
+                read_files = list(Path( fastqc.var["fastq_folder"] ).glob(f'*{fastqc.var["read1_sufix"]}'))
 
                 fastqc_jobs=[]
 

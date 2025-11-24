@@ -4,3 +4,4 @@
     extra_args: ""
     mk.output: "./test/test-output"
     map.f: "./test/test.fastq.gz"
+    read1_sufix: ".fastq.gz"
