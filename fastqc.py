@@ -8,9 +8,9 @@ fastqc=jawm.Process(
     script="""#!/bin/bash
 fastqc {{extra_args}} -t {{ncores}} -o {{fastqc_output}} {{f}}
 """,
-
-    # example arguments :
     
+    # example arguments :
+    var={"extra_args": ""}, 
     # var={
     #     "extra_args": "",
     #     "ncores":"<n.cores>", 
