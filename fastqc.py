@@ -4,7 +4,7 @@ import os
 # {{{
 fastqc=jawm.Process( 
     name="fastqc",
-    when=lambda p: not os.path.isfile( os.path.join( p.var["fastqc_output"], os.path.basename( str(p.var["f"]).lstrip().split(" ")[0].split("{{read1_sufix}}")[0] )+"_fastqc.html" )  ) ,
+    when=lambda p: not os.path.isfile( os.path.join( p.var["fastqc_output"], os.path.basename( str(p.var["f"]).lstrip().split(" ")[0] )+"_fastqc.html" )  ) ,
     script="""#!/bin/bash
 fastqc {{extra_args}} -t {{ncores}} -o {{fastqc_output}} {{f}}
 """,
