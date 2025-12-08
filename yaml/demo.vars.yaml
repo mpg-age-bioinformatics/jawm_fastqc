@@ -1,7 +1,0 @@
-- scope: process
-  name: "fastqc"
-  var:
-    extra_args: ""
-    mk.fastqc_output: "./test/test-output"
-    map.f: "./test/test.fastq.gz"
-    read1_sufix: ".fastq.gz"
