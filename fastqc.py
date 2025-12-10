@@ -1,5 +1,7 @@
 import jawm
 import os
+from pathlib import Path
+
 
 # {{{
 fastqc=jawm.Process( 
@@ -39,11 +41,27 @@ fastqc {{extra_args}} -t {{ncores}} -o {{fastqc_output}} {{f}}
   
 )
 
+def report_files(fastqc_output) :
+    report_paths={}
+    dic={ 
+        fastqc_output : { 
+            "fastqc":"*_fastqc.html",
+            }
+        }
+
+    for path in dic :
+        directory = Path( path )
+        for folder in dic[path] :
+            files=[ f.resolve() for f in directory.glob( dic[path][folder] ) ]
+            if files :
+                report_paths[folder]=files
+
+    return report_paths
+
 
 if __name__ == "__main__":
     import sys
     from jawm.utils import workflow
-    from pathlib import Path
 
     workflows, vars, args, unknown_args = jawm.utils.parse_arguments(["main","fastqc","test"],)
 
