@@ -8,14 +8,14 @@ fastqc=jawm.Process(
     name="fastqc",
     when=lambda p: not os.path.isfile( os.path.join( p.var["fastqc_output"], os.path.basename( str(p.var["f"]).lstrip().split(" ")[0].split( ".fastq.gz"  )[0].split( ".fq.gz"  )[0] )+"_fastqc.html" )  ) ,
     script="""#!/bin/bash
-fastqc {{extra_args}} -t {{ncores}} -o {{fastqc_output}} {{f}}
+fastqc {{extra_args}} -t {{cpus}} -o {{fastqc_output}} {{f}}
 """,
     
     # example arguments :
     var={"extra_args": ""}, 
     # var={
     #     "extra_args": "",
-    #     "ncores":"<n.cores>", 
+    #     "cpus":"<n.cores>", 
     #     "mk.output":"<output_folder>",
     #     "map.f": "<input_file>",
     # },

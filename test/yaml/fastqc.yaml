@@ -11,7 +11,7 @@
     extra_args: ""
     mk.fastqc_output: "./test/test-output"
     map.f: "./test/test-input/test.fastq.gz"
-    ncores: "2"
+    cpus: "2"
     read1_sufix: ".fastq.gz"
     map.test: "/nexus"
     # map.fastq_folder: "./test/test-input/"

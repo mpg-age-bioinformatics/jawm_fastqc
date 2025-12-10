@@ -6,7 +6,7 @@
     "-v": "/nexus"
   parallel: False  
   var: 
-    ncores: "2"
+    cpus: "2"
 
 - scope: process
   name: "fastqc"
