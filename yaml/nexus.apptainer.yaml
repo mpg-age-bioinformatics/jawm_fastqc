@@ -1,0 +1,3 @@
+- scope: process
+  name: fastqc
+  container: /nexus/posix0/MAGE-flaski/service/images/jawm/fastqc-0.11.9.sif
