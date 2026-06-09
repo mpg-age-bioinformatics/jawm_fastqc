@@ -58,26 +58,6 @@ def report_files(fastqc_output) :
 
     return report_paths
 
-
-
-
-def unzip_file(zip_path, destination=None):
-    from pathlib import Path
-    from zipfile import ZipFile
-    """Extract a zip file into destination and return the destination path."""
-    zip_path = Path(zip_path)
-    destination = zip_path.parent if destination is None else Path(destination)
-    destination.mkdir(parents=True, exist_ok=True)
-
-    with ZipFile(zip_path, "r") as zip_ref:
-        for member in zip_ref.infolist():
-            target_path = destination / member.filename
-            if not target_path.resolve().is_relative_to(destination.resolve()):
-                raise ValueError(f"Unsafe zip entry: {member.filename}")
-        zip_ref.extractall(destination)
-
-    return destination
-
 if __name__ == "__main__":
     import sys
     from jawm.utils import workflow
@@ -115,14 +95,8 @@ if __name__ == "__main__":
                 jawm.Process.wait( fastqc_jobs )
 
 
-
     if workflow( "test", workflows ) :
 
-        zip_path=os.path.join( fastqc.var["fastqc_output"], os.path.basename( str(fastqc.var["f"]).lstrip().split(" ")[0].split( ".fastq.gz"  )[0]+"_fastqc.zip" ) )
-
-        unzip_file(zip_path)
-
         print("Test completed.")
-
 
     sys.exit(0)
