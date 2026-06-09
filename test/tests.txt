@@ -1,2 +1,2 @@
 #jawm_file.py;workflow;parameters.file1.yaml,parameters.file2.yaml;"Test name";test_hash
-fastqc.py;test;./test/yaml/fastqc.yaml;"Main workflow test";919f11e0898ec0d7bf3de9555530180dd0bbc11b85d426858fe597280485fa12
+fastqc.py;test;./test/yaml/fastqc.yaml;"Main workflow test";a5b1fe95d15225cdcf7120ad428b5274865941289acf911bb05b48fc1637b7ee
