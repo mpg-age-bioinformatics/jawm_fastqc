@@ -1,6 +1,8 @@
 import jawm
 import sys
 import os
+import logging
+logger = logging.getLogger("jawm_fastqc")
 
 # define our fastqc process
 fastqc=jawm.Process(
@@ -109,7 +111,6 @@ if __name__ == "__main__":
     zip_path=os.path.join( fastqc.var["fastqc_output"], os.path.basename( str( fastqc.var["f"] ).lstrip().split(" ")[0].split( ".fastq.gz"  )[0].split( ".fq.gz"  )[0] )+"_fastqc.zip" )
     unzip(zip_path)
 
-    print("Test completed")
-    sys.stdout.flush()
+    logger.info("Test completed.")
 
 sys.exit(0)
