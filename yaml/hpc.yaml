@@ -1,10 +1,18 @@
-  # a slurm and apptainer template for our hpc named cluster
+# hpc.yaml
 - scope: global
   environment: "apptainer"
-  automated_mount: False
+
+  # add arguments to the apptainer call
   environment_apptainer: { "-B":"/nexus:/nexus" }
-  manager: slurm
+
+  # if needed (nfs mounts ?), disable mk. and map. volume mapping in containers
+  automated_mount: False
+
+  # use this if you need to for example add apptainer
+  # to your path before the script is called
+  before_script: "module load apptainer"
+
+  # add more slurm arguments
   manager_slurm: { "-p":"cluster,dedicated" }
   # before_script: "module load apptainer"
   # manager_slurm: {"--ntasks-per-core":"2", "-p":"general,small" }
-  parallel: True

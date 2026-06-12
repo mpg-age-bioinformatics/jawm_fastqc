@@ -1,0 +1,13 @@
+# ./jawm_fastqc/test/yaml/test.yaml
+- scope: process
+  name: fastqc
+  parallel: False
+  var:
+    mk.fastqc_output: "./test/test-output"
+    map.f: "./test/test-input/my_test_file_1.fastq.gz"
+
+# files to be used for SHA-256 hash generation     
+- scope: hash
+  include: ./test/test-output/my_test_file_1_fastqc/fastqc_data.txt
+  # overwrite any existing hash in the logs folder
+  overwrite: true

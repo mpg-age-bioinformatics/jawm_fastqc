@@ -1,17 +1,11 @@
-- scope: process
-  name: "fastqc"
-  container: "mpgagebioinformatics/fastqc:0.11.9"
+# docker.yaml
+- scope: global
+  parallel: false # run processes sequentially
   environment: "docker"
-  environment_docker": 
-    "-v": "/nexus"
-  parallel: False  
-  var: 
-    cpus: "2"
+  docker_run_as_user: true # do this if you want/need to run docker without root
 
 - scope: process
   name: "fastqc"
   var:
-    extra_args: ""
-    mk.fastqc_output: "./test/test-output"
-    map.f: "./test/test.fastq.gz"
-    read1_sufix: ".fastq.gz"
+    mk.fastqc_output: ./test/test-output
+    map.f: ./test/test.fastq.gz
