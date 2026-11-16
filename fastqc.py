@@ -113,4 +113,4 @@ if __name__ == "__main__":
 
     logger.info("Test completed.")
 
-sys.exit(0)
+  sys.exit(0)
