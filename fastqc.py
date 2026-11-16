@@ -65,6 +65,17 @@ def unzip(zip_path):
         raise ValueError(f"Unsafe zip entry: {member.filename}")
     zip_ref.extractall(destination)
 
+def report_files(fastqc_output):
+  """Return FastQC HTML reports for the workflow report manifest."""
+  from pathlib import Path
+
+  files = sorted(
+    path.resolve() for path in Path(fastqc_output).glob("*_fastqc.html")
+    if path.is_file()
+  )
+  return {"fastqc": files} if files else {}
+
+
 if __name__ == "__main__":
 
   from jawm.utils import workflow
